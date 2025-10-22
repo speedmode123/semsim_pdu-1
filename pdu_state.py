@@ -59,28 +59,28 @@ class PduStatusState:
 @dataclass
 class PduUnitLineStatesState:
     """PDU Unit Line States"""
-    high_pw_heater_en_sel: int = 0x00
-    low_pw_heater_en_sel: int = 0x00
-    reaction_wheel_en_sel: int = 0x00
-    prop_en_sel: int = 0x00
-    avionic_load_en_sel: int = 0x00
-    hdrm_en_sel: int = 0x00
-    isolated_ldo_en_sel: int = 0x00
-    isolated_pw_en_sel: int = 0x00
-    therm_and_flyback_en_sel: int = 0xFF
+    HighPwHeaterEnSel: int = 0x00
+    LowPwHeaterEnSel: int = 0x00
+    ReactionWheelEnSel: int = 0x00
+    PropEnSel: int = 0x00
+    AvionicLoadEnSel: int = 0x00
+    HdrmEnSel: int = 0x00
+    IsolatedLdoEnSel: int = 0x00
+    IsolatedPwEnSel: int = 0x00
+    ThermAndFlybackEnSel: int = 0xFF
 
     def to_dict(self) -> dict:
         return {
             "PduUnitLineStates": {
-                "HighPwHeaterEnSel": self.high_pw_heater_en_sel,
-                "LowPwHeaterEnSel": self.low_pw_heater_en_sel,
-                "ReactionWheelEnSel": self.reaction_wheel_en_sel,
-                "PropEnSel": self.prop_en_sel,
-                "AvionicLoadEnSel": self.avionic_load_en_sel,
-                "HdrmEnSel": self.hdrm_en_sel,
-                "IsolatedLdoEnSel": self.isolated_ldo_en_sel,
-                "IsolatedPwEnSel": self.isolated_pw_en_sel,
-                "ThermAndFlybackEnSel": self.therm_and_flyback_en_sel
+                "HighPwHeaterEnSel": self.HighPwHeaterEnSel,
+                "LowPwHeaterEnSel": self.LowPwHeaterEnSel,
+                "ReactionWheelEnSel": self.ReactionWheelEnSel,
+                "PropEnSel": self.PropEnSel,
+                "AvionicLoadEnSel": self.AvionicLoadEnSel,
+                "HdrmEnSel": self.HdrmEnSel,
+                "IsolatedLdoEnSel": self.IsolatedLdoEnSel,
+                "IsolatedPwEnSel": self.IsolatedPwEnSel,
+                "ThermAndFlybackEnSel": self.ThermAndFlybackEnSel
             }
         }
 
@@ -260,20 +260,8 @@ class PduStateManager:
                     setattr(unit.pdu_status, key, value)
             elif state_name == 'PduUnitLineStates' and 'PduUnitLineStates' in data:
                 line_data = data['PduUnitLineStates']
-                key_mapping = {
-                    'HighPwHeaterEnSel': 'high_pw_heater_en_sel',
-                    'LowPwHeaterEnSel': 'low_pw_heater_en_sel',
-                    'ReactionWheelEnSel': 'reaction_wheel_en_sel',
-                    'PropEnSel': 'prop_en_sel',
-                    'AvionicLoadEnSel': 'avionic_load_en_sel',
-                    'HdrmEnSel': 'hdrm_en_sel',
-                    'IsolatedLdoEnSel': 'isolated_ldo_en_sel',
-                    'IsolatedPwEnSel': 'isolated_pw_en_sel',
-                    'ThermAndFlybackEnSel': 'therm_and_flyback_en_sel'
-                }
                 for key, value in line_data.items():
-                    attr_name = key_mapping.get(key, key)
-                    setattr(unit.unit_line_states, attr_name, value)
+                    setattr(unit.unit_line_states, key, value)
             elif state_name == 'PduRawMeasurements' and 'PduRawMeasurements' in data:
                 raw_data = data['PduRawMeasurements']
                 for key, value in raw_data.items():

@@ -45,23 +45,23 @@ class TestUnitLineStates(unittest.TestCase):
         pdu_n = self.state_manager.get_pdu_state(0x65)
         pdu_r = self.state_manager.get_pdu_state(0x66)
         
-        self.assertEqual(pdu_n.unit_line_states.high_pw_heater_en_sel, 0x00)
-        self.assertEqual(pdu_n.unit_line_states.low_pw_heater_en_sel, 0x00)
-        self.assertEqual(pdu_r.unit_line_states.high_pw_heater_en_sel, 0x00)
+        self.assertEqual(pdu_n.unit_line_states.HighPwHeaterEnSel, 0x00)
+        self.assertEqual(pdu_n.unit_line_states.LowPwHeaterEnSel, 0x00)
+        self.assertEqual(pdu_r.unit_line_states.HighPwHeaterEnSel, 0x00)
         
     def test_set_unit_line_states(self):
         """Test setting unit line states"""
         pdu_n = self.state_manager.get_pdu_state(0x65)
         
         # Turn on first 3 high power heaters (bits 0, 1, 2)
-        pdu_n.unit_line_states.high_pw_heater_en_sel = 0b111
+        pdu_n.unit_line_states.HighPwHeaterEnSel = 0b111
         
-        self.assertEqual(pdu_n.unit_line_states.high_pw_heater_en_sel, 0b111)
+        self.assertEqual(pdu_n.unit_line_states.HighPwHeaterEnSel, 0b111)
         
     def test_unit_line_to_dict(self):
         """Test unit line state serialization"""
         pdu_n = self.state_manager.get_pdu_state(0x65)
-        pdu_n.unit_line_states.high_pw_heater_en_sel = 0xFF
+        pdu_n.unit_line_states.HighPwHeaterEnSel = 0xFF
         
         state_dict = pdu_n.unit_line_states.to_dict()
         
@@ -72,13 +72,13 @@ class TestUnitLineStates(unittest.TestCase):
         """Test setting multiple unit line categories"""
         pdu_n = self.state_manager.get_pdu_state(0x65)
         
-        pdu_n.unit_line_states.high_pw_heater_en_sel = 0b11111111
-        pdu_n.unit_line_states.low_pw_heater_en_sel = 0b1111
-        pdu_n.unit_line_states.reaction_wheel_en_sel = 0b1111
+        pdu_n.unit_line_states.HighPwHeaterEnSel = 0b11111111
+        pdu_n.unit_line_states.LowPwHeaterEnSel = 0b1111
+        pdu_n.unit_line_states.ReactionWheelEnSel = 0b1111
         
-        self.assertEqual(pdu_n.unit_line_states.high_pw_heater_en_sel, 0b11111111)
-        self.assertEqual(pdu_n.unit_line_states.low_pw_heater_en_sel, 0b1111)
-        self.assertEqual(pdu_n.unit_line_states.reaction_wheel_en_sel, 0b1111)
+        self.assertEqual(pdu_n.unit_line_states.HighPwHeaterEnSel, 0b11111111)
+        self.assertEqual(pdu_n.unit_line_states.LowPwHeaterEnSel, 0b1111)
+        self.assertEqual(pdu_n.unit_line_states.ReactionWheelEnSel, 0b1111)
 
 
 class TestMcpMapping(unittest.TestCase):
@@ -200,7 +200,7 @@ class TestMcpManager(unittest.TestCase):
         pdu_n = self.state_manager.get_pdu_state(0x65)
         
         # Set first 3 high power heaters ON
-        pdu_n.unit_line_states.high_pw_heater_en_sel = 0b111
+        pdu_n.unit_line_states.HighPwHeaterEnSel = 0b111
         
         pos_on, pos_off = self.mcp_manager._get_switch_positions(pdu_n.unit_line_states)
         
@@ -217,8 +217,8 @@ class TestMcpManager(unittest.TestCase):
         pdu_n = self.state_manager.get_pdu_state(0x65)
         
         # Set various categories
-        pdu_n.unit_line_states.high_pw_heater_en_sel = 0xFF  # 8 bits
-        pdu_n.unit_line_states.reaction_wheel_en_sel = 0b1111  # 4 bits
+        pdu_n.unit_line_states.HighPwHeaterEnSel = 0xFF  # 8 bits
+        pdu_n.unit_line_states.ReactionWheelEnSel = 0b1111  # 4 bits
         
         pos_on, pos_off = self.mcp_manager._get_switch_positions(pdu_n.unit_line_states)
         
@@ -246,7 +246,7 @@ class TestMcpIntegration(unittest.TestCase):
             pdu_n.pdu_status.PduState = 2  # OPERATE state
             
             # Turn on some unit lines
-            pdu_n.unit_line_states.high_pw_heater_en_sel = 0b11
+            pdu_n.unit_line_states.HighPwHeaterEnSel = 0b11
             
             # Give time for monitoring thread to process
             import time
