@@ -8,10 +8,14 @@ import serial
 import json
 import sys
 import logging
-import ctypes
 from threading import Thread
 
-from pdu_packetization import PduPacket, encode_pdu_packet, decode_pdu_packet
+try:
+    from pdu_packetization import PduPacket, encode_pdu_packet, decode_pdu_packet, PACKETIZATION_AVAILABLE
+    if not PACKETIZATION_AVAILABLE:
+        raise ImportError("PDU packetization C library not available")
+except ImportError as e:
+    raise ImportError(f"RS422 interface requires pdu_packetization module: {e}")
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 LOGGER = logging.getLogger(__name__)

@@ -11,7 +11,6 @@ import sys
 
 from pdu_state import PduStateManager
 from tmtc_manager import tmtc_manager
-from rs422_interface import rs422_comm, rs_422_listener
 from mcp_manager import McpManager
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -71,6 +70,15 @@ def run_emulator(tcp_ip: str, tcp_port: int, rs422_port: str, rs422_baud: int):
     # Initialize state manager
     state_manager = PduStateManager()
     
+    try:
+        from rs422_interface import rs422_comm, rs_422_listener
+    except ImportError as e:
+        LOGGER.error(f"Failed to import RS422 interface: {e}")
+        LOGGER.error("RS422 interface requires pdu_packetization C library")
+        LOGGER.error("Please ensure the C library is available in the resource/ directory")
+        sys.exit(1)
+    
+    # Start MCP hardware manager
     try:
         mcp_manager = McpManager(state_manager, poll_interval=0.1)
         mcp_manager.start()
