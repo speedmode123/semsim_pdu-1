@@ -214,11 +214,11 @@ def cmd_ack_generator(j_command_packet, apid, address, state_manager, UDPServerS
             continue
         
         try:
-            MsgAcknowlegement, TYPE, SUBTYPE = pdu.GetMsgAcknowlegement(j_command_packet, apid, state_manager)
-            json_object = json.dumps(MsgAcknowlegement)
+            MsgAcknowledgement, TYPE, SUBTYPE = pdu.GetMsgAcknowledgement(j_command_packet, apid, state_manager)
+            json_object = json.dumps(MsgAcknowledgement)
             ack_command = SpacePacketCommand(0x02, json_object, apid, TYPE, SUBTYPE)
             UDPServerSocket.sendto(ack_command, address)
-            LOGGER.info(f"SEMSIM to OBC: {MsgAcknowlegement}")
+            LOGGER.info(f"SEMSIM to OBC: {MsgAcknowledgement}")
         except Exception as e:
             LOGGER.error(f"Failed to Create Ack SpacePacket: {e}")
 

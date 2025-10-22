@@ -31,7 +31,7 @@ LogicalUnitId = {
 }
 
 
-def GetMsgAcknowlegement(j_command_packet, apid, state_manager):
+def GetMsgAcknowledgement(j_command_packet, apid, state_manager):
     """Generate message acknowledgement"""
     unit = state_manager.get_unit(apid)
     

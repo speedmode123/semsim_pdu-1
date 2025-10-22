@@ -151,7 +151,7 @@ class MsgAcknowledgementState:
 
     def to_dict(self) -> dict:
         return {
-            "MsgAcknowlegement": {
+            "MsgAcknowledgement": {
                 "RequestedMsgId": self.RequestedMsgId,
                 "PduReturnCode": self.PduReturnCode
             }
@@ -270,8 +270,8 @@ class PduStateManager:
                 conv_data = data['PduConvertedMeasurements']
                 for key, value in conv_data.items():
                     setattr(unit.converted_measurements, key, value)
-            elif state_name == 'MsgAcknowledgment' and 'MsgAcknowlegement' in data:
-                ack_data = data['MsgAcknowlegement']
+            elif state_name == 'MsgAcknowledgment' and 'MsgAcknowledgment' in data:
+                ack_data = data['MsgAcknowledgment']
                 unit.msg_acknowledgement.RequestedMsgId = ack_data['RequestedMsgId']
                 unit.msg_acknowledgement.PduReturnCode = ack_data['PduReturnCode']
             elif state_name == 'STATE':

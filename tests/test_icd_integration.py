@@ -1,6 +1,6 @@
 """
 PDU ICD Integration Test
-Tests OBC-to-SEMSIM communication via UDP with ICD-compliant commands and responses
+Tests OBC-to-SEMSIM communication via TCP/IP with ICD-compliant commands and responses
 
 PREREQUISITES:
     1. Start SEMSIM server in a separate terminal:
@@ -79,20 +79,19 @@ class TestPduIcdIntegration(unittest.TestCase):
         """Helper to create test packet"""
         command_bytes = bytes(command_json, 'utf-8')
         
-        # Packet header - must match SpacePacketCommand in tmtc_manager.py
+        # Packet header
         tc_version = 0x00
-        tc_type = 0x00  # Changed from 0x01 to 0x00 to match SEMSIM
+        tc_type = 0x01
         tc_dfh_flag = 0x01
         tc_apid = APID
         tc_seq_flag = 0x03
         
-        # Data field header (12 bytes total)
+        # Data field header
         data_field_header = [0x10, packet_type, subtype, 0x00]
         data_pack_cuck = [0x2F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
         data_field_header_frame = data_field_header + data_pack_cuck
         
-        # packet_datalength = header_length + payload_length - 1 (CCSDS standard)
-        packet_header_length = len(data_field_header_frame)  # 12 bytes
+        packet_header_length = len(data_field_header_frame)
         packet_data_length_field = packet_header_length + len(command_bytes) - 1
         
         # Build packet
@@ -219,9 +218,8 @@ class TestPduIcdIntegration(unittest.TestCase):
         status = response["PduStatus"]
         self.assertIn("PduState", status)
         self.assertIn("ProtectionStatus", status)
-        self.assertIn("PduMode", status)
         
-        print(f"✓ PDU Status: State={status['PduState']}, Mode={status['PduMode']}")
+        print(f"✓ PDU Status: State={status['PduState']}, Mode={status['ProtectionStatus']}")
     
     def test_03_get_unit_line_states(self):
         """Test GetUnitLineStates command"""
@@ -265,7 +263,7 @@ class TestPduIcdIntegration(unittest.TestCase):
         
         # Verify acknowledgement
         self.assertIsNotNone(ack_response)
-        self.assertIn("PduMsgAcknowledgement", ack_response)
+        self.assertIn("MsgAcknowledgement", ack_response)
         
         # Verify state changed
         time.sleep(0.5)
@@ -334,6 +332,12 @@ class TestPduIcdIntegration(unittest.TestCase):
         }
         apid, msg_type, subtype, response = self.send_command(command, packet_type=3, subtype=131)
         
+        # Verify acknowledgement
+        self.assertIsNotNone(response)
+        self.assertIn("MsgAcknowledgement", response)
+
+        response, _ = self.socket.recvfrom(4096)
+
         # Verify response
         self.assertIsNotNone(response)
         self.assertIn("PduConvertedMeasurements", response)
