@@ -11,7 +11,6 @@ import sys
 
 from pdu_state import PduStateManager
 from tmtc_manager import tmtc_manager
-from mcp_manager import McpManager
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 LOGGER = logging.getLogger(__name__)
@@ -78,15 +77,24 @@ def run_emulator(tcp_ip: str, tcp_port: int, rs422_port: str, rs422_baud: int):
         LOGGER.error("Please ensure the C library is available in the resource/ directory")
         sys.exit(1)
     
-    # Start MCP hardware manager
     try:
-        mcp_manager = McpManager(state_manager, poll_interval=0.1)
-        mcp_manager.start()
-        LOGGER.info("MCP hardware manager started")
-    except Exception as e:
-        LOGGER.error(f"Failed to start MCP hardware manager: {e}")
+        from mcp_manager import McpManager
+    except ImportError as e:
+        LOGGER.error(f"Failed to import MCP manager: {e}")
+        LOGGER.error("MCP manager requires smbus2 and Linux platform")
         LOGGER.warning("Continuing without MCP hardware...")
-        mcp_manager = None
+        McpManager = None
+    
+    # Start MCP hardware manager
+    if McpManager:
+        try:
+            mcp_manager = McpManager(state_manager, poll_interval=0.1)
+            mcp_manager.start()
+            LOGGER.info("MCP hardware manager started")
+        except Exception as e:
+            LOGGER.error(f"Failed to start MCP hardware manager: {e}")
+            LOGGER.warning("Continuing without MCP hardware...")
+            mcp_manager = None
     
     # Start RS422 interface
     try:
