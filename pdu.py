@@ -70,10 +70,10 @@ def ObcHeartBeat(ObcHeartBeat, apid, state_manager):
     updated_status = unit.pdu_status.PduState
     LOGGER.info(f"PDU internal updated_status {updated_status}")
     
-    updated_heartbeat = unit.heartbeat.HeartBeat
-    LOGGER.info(f"PDU updated_heartbeat {updated_heartbeat}")
+    incoming_heartbeat = ObcHeartBeat["ObcHeartBeat"]["HeartBeat"]
+    LOGGER.info(f"Incoming heartbeat: {incoming_heartbeat}")
     
-    unit.heartbeat.HeartBeat = ObcHeartBeat["ObcHeartBeat"]["HeartBeat"]
+    unit.heartbeat.HeartBeat = incoming_heartbeat
     unit.heartbeat.PduState = updated_status
     LOGGER.info(f"Dict_PduHeartBeat: {unit.heartbeat.to_dict()}")
     
@@ -107,6 +107,8 @@ def SetUnitPwLines(SetUnitPwLines, apid, state_manager):
     
     NewItem_SetUnitPwLines = SetUnitPwLines["SetUnitPwLines"]["Parameters"]
     setattr(unit.unit_line_states, LogicalUnitIdn, NewItem_SetUnitPwLines)
+    
+    LOGGER.info(f"Set {LogicalUnitIdn} = {NewItem_SetUnitPwLines} (0x{NewItem_SetUnitPwLines:02X})")
     
     # Update measurements based on line states
     status = NewItem_SetUnitPwLines
@@ -297,13 +299,14 @@ def GetConvertedMeasurements(ConvertedMeasurements, apid, state_manager):
     """Get converted measurements"""
     unit = state_manager.get_unit(apid)
     
-    Unit_Lines_Str = GetUnitLineStates(ConvertedMeasurements, apid, state_manager)
-    Unit_Lines = json.loads(Unit_Lines_Str)
-    Unit_Lines_Status = Unit_Lines["PduUnitLineStates"]
-    LogicId = ConvertedMeasurements["GetConvertedMeasurements"]["LogicUnitId"]
+    LogicId = ConvertedMeasurements.get("GetConvertedMeasurements", {}).get("LogicUnitId", 0)
+    
+    # Get current unit line states
+    unit_line_states_dict = unit.unit_line_states.to_dict()
+    Unit_Lines_Status = unit_line_states_dict["PduUnitLineStates"]
     Single_Line_Status = Unit_Lines_Status[LogicalUnitId[int(LogicId)]]
     
-    LOGGER.info(f"Single_Line_Status: {Single_Line_Status}")
+    LOGGER.info(f"GetConvertedMeasurements LogicId={LogicId}, Single_Line_Status: {Single_Line_Status}")
     
     if int(Single_Line_Status) != 0:
         return json.dumps(unit.converted_measurements.to_dict())
