@@ -1,0 +1,114 @@
+======================================================================
+CHECKING RS422 CONNECTION
+======================================================================
+✓ RS422 connection is working and SEMSIM is responding
+======================================================================
+
+test_01_heartbeat (tests.test_rs422_integration.TestPduRs422Integration)
+Test OBC heartbeat command via RS422 ... 
+======================================================================
+TEST: OBC Heartbeat (RS422)
+======================================================================
+→ Sending: {'ObcHeartBeat': {'HeartBeat': 42}}
+← Received: {'PduHeartBeat': {'HeartBeat': 123, 'PduState': 1}}
+FAIL
+test_02_get_pdu_status (tests.test_rs422_integration.TestPduRs422Integration)
+Test GetPduStatus command via RS422 ... 
+======================================================================
+TEST: Get PDU Status (RS422)
+======================================================================
+→ Sending: {'GetPduStatus': {}}
+← Received: {'PduStatus': {'PduState': 1, 'ProtectionStatus': 0, 'CommHwStatus': 0, 'CommSwStatus': 0, 'UloadError': 0, 'DloadError': 0, 'CmdError': 0, 'OperStatus': 0, 'ConfigStatus': 0, 'RequestAcceptedCount': 0, 'RequestRejectedCount': 0, 'BootType_ResetCode': 0}}
+✓ PDU Status: State=1, Mode=0
+ok
+test_03_get_unit_line_states (tests.test_rs422_integration.TestPduRs422Integration)
+Test GetUnitLineStates command via RS422 ... 
+======================================================================
+TEST: Get Unit Line States (RS422)
+======================================================================
+→ Sending: {'GetUnitLineStates': {}}
+← Received: {'PduUnitLineStates': {'HighPwHeaterEnSel': 0, 'LowPwHeaterEnSel': 0, 'ReactionWheelEnSel': 0, 'PropEnSel': 0, 'AvionicLoadEnSel': 0, 'HdrmEnSel': 0, 'IsolatedLdoEnSel': 0, 'IsolatedPwEnSel': 0, 'ThermAndFlybackEnSel': 255}}
+✓ Unit Line States retrieved: 9 categories
+ok
+test_04_state_transition_to_operate (tests.test_rs422_integration.TestPduRs422Integration)
+Test PduGoOperate state transition via RS422 ... 
+======================================================================
+TEST: State Transition to Operate (RS422)
+======================================================================
+→ Sending: {'PduGoOperate': {}}
+← Operate Ack: {'MsgAcknowledgement': {'RequestedMsgId': 'PduGoOperate', 'PduReturnCode': 1}}
+→ Sending: {'GetPduStatus': {}}
+← Received: {'PduStatus': {'PduState': 2, 'ProtectionStatus': 0, 'CommHwStatus': 0, 'CommSwStatus': 0, 'UloadError': 0, 'DloadError': 0, 'CmdError': 0, 'OperStatus': 0, 'ConfigStatus': 0, 'RequestAcceptedCount': 0, 'RequestRejectedCount': 0, 'BootType_ResetCode': 0}}
+✓ State transition to Operate successful
+ok
+test_05_set_unit_power_lines (tests.test_rs422_integration.TestPduRs422Integration)
+Test SetUnitPwLines command via RS422 ... 
+======================================================================
+TEST: Set Unit Power Lines (RS422)
+======================================================================
+→ Sending: {'SetUnitPwLines': {'LogicUnitId': 0, 'Parameters': 3}}
+← Set Ack: {'MsgAcknowledgement': {'RequestedMsgId': 'SetUnitPwLines', 'PduReturnCode': 1}}
+→ Sending: {'GetUnitLineStates': {}}
+← Received: {'PduUnitLineStates': {'HighPwHeaterEnSel': 123, 'LowPwHeaterEnSel': 0, 'ReactionWheelEnSel': 0, 'PropEnSel': 0, 'AvionicLoadEnSel': 0, 'HdrmEnSel': 0, 'IsolatedLdoEnSel': 0, 'IsolatedPwEnSel': 0, 'ThermAndFlybackEnSel': 255}}
+FAIL
+test_06_get_converted_measurements (tests.test_rs422_integration.TestPduRs422Integration)
+Test GetConvertedMeasurements command via RS422 ... 
+======================================================================
+TEST: Get Converted Measurements (RS422)
+======================================================================
+→ Sending: {'SetUnitPwLines': {'LogicUnitId': 2, 'Parameters': 15}}
+← Set Ack: {'MsgAcknowledgement': {'RequestedMsgId': 'SetUnitPwLines', 'PduReturnCode': 1}}
+→ Sending: {'GetConvertedMeasurements': {'LogicUnitId': 2}}
+⚠ No response received (timeout)
+FAIL
+test_07_reset_unit_power_lines (tests.test_rs422_integration.TestPduRs422Integration)
+Test ResetUnitPwLines command via RS422 ... 
+======================================================================
+TEST: Reset Unit Power Lines (RS422)
+======================================================================
+→ Sending: {'SetUnitPwLines': {'LogicUnitId': 1, 'Parameters': 255}}
+← Set Ack: {'MsgAcknowledgement': {'RequestedMsgId': 'SetUnitPwLines', 'PduReturnCode': 1}}
+→ Sending: {'ResetUnitPwLines': {'LogicUnitId': 1, 'Parameters': 15}}
+← Reset Ack: {'MsgAcknowledgement': {'RequestedMsgId': 'ResetUnitPwLines', 'PduReturnCode': 1}}
+→ Sending: {'GetUnitLineStates': {}}
+← Received: {'PduUnitLineStates': {'HighPwHeaterEnSel': 123, 'LowPwHeaterEnSel': 0, 'ReactionWheelEnSel': 123, 'PropEnSel': 0, 'AvionicLoadEnSel': 0, 'HdrmEnSel': 0, 'IsolatedLdoEnSel': 0, 'IsolatedPwEnSel': 0, 'ThermAndFlybackEnSel': 255}}
+FAIL
+
+======================================================================
+FAIL: test_01_heartbeat (tests.test_rs422_integration.TestPduRs422Integration)
+Test OBC heartbeat command via RS422
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/pdu/Documents/semsim_pdu/tests/test_rs422_integration.py", line 241, in test_01_heartbeat
+    self.assertEqual(response["PduHeartBeat"]["HeartBeat"], 42)
+AssertionError: 123 != 42
+
+======================================================================
+FAIL: test_05_set_unit_power_lines (tests.test_rs422_integration.TestPduRs422Integration)
+Test SetUnitPwLines command via RS422
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/pdu/Documents/semsim_pdu/tests/test_rs422_integration.py", line 345, in test_05_set_unit_power_lines
+    self.assertEqual(response["PduUnitLineStates"]["HighPwHeaterEnSel"], 3)
+AssertionError: 123 != 3
+
+======================================================================
+FAIL: test_06_get_converted_measurements (tests.test_rs422_integration.TestPduRs422Integration)
+Test GetConvertedMeasurements command via RS422
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/pdu/Documents/semsim_pdu/tests/test_rs422_integration.py", line 380, in test_06_get_converted_measurements
+    self.assertIsNotNone(response, "No response received from SEMSIM")
+AssertionError: unexpectedly None : No response received from SEMSIM
+
+======================================================================
+FAIL: test_07_reset_unit_power_lines (tests.test_rs422_integration.TestPduRs422Integration)
+Test ResetUnitPwLines command via RS422
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/pdu/Documents/semsim_pdu/tests/test_rs422_integration.py", line 433, in test_07_reset_unit_power_lines
+    self.assertEqual(response["PduUnitLineStates"]["LowPwHeaterEnSel"], 240)  # 0x00F0
+AssertionError: 0 != 240
+
+----------------------------------------------------------------------
+Ran 7 tests in 9.588s
