@@ -245,7 +245,7 @@ def cmd_ack_generator(j_command_packet, apid, address, state_manager, UDPServerS
         LOGGER.info(f"CMD: {cmd}")
         
         # Commands that don't need ack
-        if cmd in ["ObcHeartBeat", "GetUnitLineStates", "GetRawMeasurements", "GetPduStatus"]:
+        if cmd in ["ObcHeartBeat", "GetUnitLineStates", "GetRawMeasurements", "GetPduStatus", "GetConvertedMeasurements"]:
             continue
         
         try:
