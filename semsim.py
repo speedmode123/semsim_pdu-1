@@ -70,12 +70,13 @@ def run_emulator(tcp_ip: str, tcp_port: int, rs422_port: str, rs422_baud: int):
     state_manager = PduStateManager()
     
     try:
-        from rs422_interface import rs422_comm, rs_422_listener
+        from rs422_handler import RS422Handler
+        rs422_available = True
     except ImportError as e:
-        LOGGER.error(f"Failed to import RS422 interface: {e}")
-        LOGGER.error("RS422 interface requires pdu_packetization C library")
+        LOGGER.error(f"Failed to import RS422 handler: {e}")
+        LOGGER.error("RS422 handler requires pdu_packetization C library")
         LOGGER.error("Please ensure the C library is available in the resource/ directory")
-        sys.exit(1)
+        rs422_available = False
     
     try:
         from mcp_manager import McpManager
@@ -96,16 +97,19 @@ def run_emulator(tcp_ip: str, tcp_port: int, rs422_port: str, rs422_baud: int):
             LOGGER.warning("Continuing without MCP hardware...")
             mcp_manager = None
     
-    # Start RS422 interface
-    try:
-        comm = rs422_comm(rs422_port, rs422_baud)
-        rs422_thread = Thread(target=rs_422_listener, args=(comm, state_manager))
-        rs422_thread.daemon = True
-        rs422_thread.start()
-        LOGGER.info("RS422 interface started")
-    except Exception as e:
-        LOGGER.error(f"Failed to start RS422 interface: {e}")
-        LOGGER.warning("Continuing without RS422...")
+    rs422_handler = None
+    if rs422_available:
+        try:
+            rs422_handler = RS422Handler(rs422_port, rs422_baud, state_manager)
+            if rs422_handler.start():
+                LOGGER.info("RS422 handler started successfully")
+            else:
+                LOGGER.warning("Failed to start RS422 handler")
+                rs422_handler = None
+        except Exception as e:
+            LOGGER.error(f"Failed to initialize RS422 handler: {e}")
+            LOGGER.warning("Continuing without RS422...")
+            rs422_handler = None
     
     # Run TMTC manager with hardware mode enabled
     try:
@@ -117,6 +121,10 @@ def run_emulator(tcp_ip: str, tcp_port: int, rs422_port: str, rs422_baud: int):
         LOGGER.error(f"Emulator error: {e}")
         raise
     finally:
+        if rs422_handler:
+            rs422_handler.stop()
+            LOGGER.info("RS422 handler shutdown complete")
+        
         if mcp_manager:
             mcp_manager.shutdown()
             LOGGER.info("MCP hardware manager shutdown complete")

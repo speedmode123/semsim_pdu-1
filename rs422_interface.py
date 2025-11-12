@@ -38,7 +38,8 @@ PDU_COMMANDS = {
     12: "ResetUnitPwLines",
     13: "OverwriteUnitPwLines",
     14: "GetUnitLineStates",
-    15: "GetRawMeasurements"
+    15: "GetRawMeasurements",
+    16: "GetConvertedMeasurements"
 }
 
 LogicalUnitId = {
@@ -193,27 +194,181 @@ def rs422_comm(port, speed):
 
 def read_command(ser_port, state_manager):
     """Read commands from RS422"""
+    import pdu
+    
+    APID = 0x65
+    
     while True:
-        APID = 0x65
-        bs = b''
-        start_byte = ser_port.read()
-        bs += start_byte
-        
-        if hex(ord(start_byte)) == '0x55':
-            read_byte = ser_port.read()
-            bs += read_byte
-            while hex(ord(read_byte)) != '0x55':
+        try:
+            bs = b''
+            start_byte = ser_port.read()
+            bs += start_byte
+            
+            if hex(ord(start_byte)) == '0x55':
                 read_byte = ser_port.read()
                 bs += read_byte
-            LOGGER.info(f"read_buffer {bs}")
-            
-            if bs and "USB1" in ser_port.port:
-                print(f"OBC to PDU {bs.hex()}")
-                pdu_cmd, mid, lid, pld = decode_obc_rs422_frame(bs)
+                while hex(ord(read_byte)) != '0x55':
+                    read_byte = ser_port.read()
+                    bs += read_byte
                 
-                # Process command based on message ID
-                # ... existing command processing logic ...
-                # (keeping the existing logic but using state_manager)
+                LOGGER.info(f"read_buffer {bs.hex()}")
+                
+                if bs:
+                    if "USB1" in ser_port.port:
+                        print(f"OBC to PDU {bs.hex()}")
+                    
+                    pdu_cmd, mid, lid, pld = decode_obc_rs422_frame(bs)
+                    LOGGER.info(f"RS422 Command: {pdu_cmd}, MID: {mid}, LID: {lid}")
+                    
+                    # Convert RS422 command to JSON format for processing
+                    j_command = convert_rs422_to_json(pdu_cmd, lid, pld)
+                    LOGGER.info(f"OBC to SEMSIM (RS422): {j_command}")
+                    
+                    # Process command using PDU functions
+                    response = process_rs422_command(j_command, APID, state_manager)
+                    
+                    # Send response back via RS422
+                    if response:
+                        response_frame = encode_rs422_response(response, mid, lid)
+                        write_command(ser_port, response_frame, len(response_frame))
+                        LOGGER.info(f"SEMSIM to OBC (RS422): {response}")
+                        
+        except Exception as e:
+            LOGGER.error(f"RS422 read error: {e}")
+            time.sleep(0.1)
+
+
+def convert_rs422_to_json(pdu_cmd, lid, pld):
+    """Convert RS422 command to JSON format"""
+    if pdu_cmd == "ObcHeartBeat":
+        if len(pld) > 0:
+            heartbeat_value = pld[0]
+        else:
+            heartbeat_value = 0
+        return {"ObcHeartBeat": {"HeartBeat": heartbeat_value}}
+    
+    elif pdu_cmd == "GetPduStatus":
+        return {"GetPduStatus": {}}
+    
+    elif pdu_cmd == "PduGoLoad":
+        return {"PduGoLoad": {}}
+    
+    elif pdu_cmd == "PduGoSafe":
+        return {"PduGoSafe": {}}
+    
+    elif pdu_cmd == "PduGoOperate":
+        return {"PduGoOperate": {}}
+    
+    elif pdu_cmd == "SetUnitPwLines":
+        if len(pld) > 0:
+            parameters = pld[0]
+        else:
+            parameters = 0
+        return {"SetUnitPwLines": {"LogicUnitId": lid, "Parameters": parameters}}
+    
+    elif pdu_cmd == "ResetUnitPwLines":
+        if len(pld) > 0:
+            parameters = pld[0]
+        else:
+            parameters = 0
+        return {"ResetUnitPwLines": {"LogicUnitId": lid, "Parameters": parameters}}
+    
+    elif pdu_cmd == "OverwriteUnitPwLines":
+        if len(pld) > 0:
+            parameters = pld[0]
+        else:
+            parameters = 0
+        return {"OverwriteUnitPwLines": {"LogicUnitId": lid, "Parameters": parameters}}
+    
+    elif pdu_cmd == "GetUnitLineStates":
+        return {"GetUnitLineStates": {"LogicUnitId": lid}}
+    
+    elif pdu_cmd == "GetRawMeasurements":
+        return {"GetRawMeasurements": {"LogicUnitId": lid}}
+    
+    elif pdu_cmd == "GetConvertedMeasurements":
+        return {"GetConvertedMeasurements": {"LogicUnitId": lid}}
+    
+    else:
+        LOGGER.warning(f"Unknown RS422 command: {pdu_cmd}")
+        return {}
+
+
+def process_rs422_command(j_command, apid, state_manager):
+    """Process RS422 command and generate response"""
+    import pdu
+    
+    for cmd, params in j_command.items():
+        try:
+            if cmd == "ObcHeartBeat":
+                return json.loads(pdu.ObcHeartBeat(j_command, apid, state_manager))
+            
+            elif cmd == "GetPduStatus":
+                return json.loads(pdu.GetPduStatus(params, apid, state_manager))
+            
+            elif cmd == "PduGoLoad":
+                pdu.PduGoTo(cmd, apid, state_manager)
+                return json.loads(pdu.GetMsgAcknowledgement(j_command, apid, state_manager)[0])
+            
+            elif cmd == "PduGoSafe":
+                pdu.PduGoTo(cmd, apid, state_manager)
+                return json.loads(pdu.GetMsgAcknowledgement(j_command, apid, state_manager)[0])
+            
+            elif cmd == "PduGoOperate":
+                pdu.PduGoTo(cmd, apid, state_manager)
+                return json.loads(pdu.GetMsgAcknowledgement(j_command, apid, state_manager)[0])
+            
+            elif cmd == "SetUnitPwLines":
+                pdu.SetUnitPwLines(j_command, apid, state_manager)
+                return json.loads(pdu.GetMsgAcknowledgement(j_command, apid, state_manager)[0])
+            
+            elif cmd == "ResetUnitPwLines":
+                pdu.ResetUnitPwLines(j_command, apid, state_manager)
+                return json.loads(pdu.GetMsgAcknowledgement(j_command, apid, state_manager)[0])
+            
+            elif cmd == "OverwriteUnitPwLines":
+                pdu.OverwriteUnitPwLines(j_command, apid, state_manager)
+                return json.loads(pdu.GetMsgAcknowledgement(j_command, apid, state_manager)[0])
+            
+            elif cmd == "GetUnitLineStates":
+                return json.loads(pdu.GetUnitLineStates(params, apid, state_manager))
+            
+            elif cmd == "GetRawMeasurements":
+                return json.loads(pdu.GetRawMeasurements(j_command, apid, state_manager))
+            
+            elif cmd == "GetConvertedMeasurements":
+                return json.loads(pdu.GetConvertedMeasurements(j_command, apid, state_manager))
+            
+            else:
+                LOGGER.warning(f"Unhandled command: {cmd}")
+                return None
+                
+        except ValueError as e:
+            LOGGER.error(f"Validation error for RS422 command {cmd}: {e}")
+            unit = state_manager.get_unit(apid)
+            unit.msg_acknowledgement.RequestedMsgId = cmd
+            unit.msg_acknowledgement.PduReturnCode = 1  # Error
+            return unit.msg_acknowledgement.to_dict()
+        
+        except Exception as e:
+            LOGGER.error(f"Error processing RS422 command {cmd}: {e}")
+            return None
+    
+    return None
+
+
+def encode_rs422_response(response_dict, mid, lid):
+    """Encode response dictionary to RS422 frame"""
+    # Convert response dict to JSON string
+    response_json = json.dumps(response_dict)
+    
+    # Convert JSON to bytes for payload
+    payload_bytes = list(response_json.encode('utf-8'))
+    
+    # Create RS422 frame
+    response_frame = encode_obc_rs422_frame(mid, lid, payload_bytes)
+    
+    return response_frame
 
 
 def write_command(ser_port, sccp_cmd_null, len_spc):

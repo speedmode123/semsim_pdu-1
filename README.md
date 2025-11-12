@@ -81,7 +81,7 @@ Commands are processed in `pdu.py`:
 ### Communication
 
 - **TCP/IP**: CCSDS Space Packet protocol (tmtc_manager.py)
-- **RS422**: Serial interface for hardware communication (rs422_interface.py)
+- **RS422**: Serial interface for hardware communication (rs422_handler.py)
 - **MCP23017**: GPIO expander for hardware control (mcp_manager.py)
 
 ### Hardware Control (Emulator Mode)
@@ -103,6 +103,57 @@ The MCP Manager (`mcp_manager.py`) controls 71 unit lines via 6 MCP23017 GPIO ex
 - **Propulsion**: Lines 58-59 (2 lines)
 - **Isolated LDO**: Lines 60-65 (6 lines)
 - **Isolated Power**: Lines 66-68 (3 lines)
+
+## RS422 Communication
+
+### RS422 Handler Architecture
+
+The PDU emulator uses a dedicated `RS422Handler` class for serial communication:
+
+**Key Features:**
+- **Independent Thread**: RS422 operates on its own thread, parallel to TCP/IP
+- **Frame-Based Protocol**: Uses custom packetization with start/end markers (0x55)
+- **Binary Encoding**: Commands encoded using `pdu_packetization` C library
+- **Bidirectional**: Sends and receives commands/responses asynchronously
+
+**Communication Flow:**
+1. OBC sends binary RS422 frame → PDU receives via serial port
+2. PDU decodes frame → extracts message ID, logical unit ID, payload
+3. PDU processes command using same `pdu.py` functions as TCP/IP
+4. PDU encodes response → sends binary RS422 frame back to OBC
+
+**Supported Commands via RS422:**
+All ICD commands work identically via RS422 and TCP/IP:
+- ObcHeartBeat, GetPduStatus, PduGoLoad/Safe/Operate
+- SetUnitPwLines, ResetUnitPwLines, OverwriteUnitPwLines
+- GetUnitLineStates, GetRawMeasurements, GetConvertedMeasurements
+
+### Testing RS422
+
+Since RS422 requires Linux hardware and the C packetization library, you can:
+
+**Option 1: TCP/IP Testing (Recommended)**
+\`\`\`bash
+# Run simulator mode (works on all platforms)
+python semsim.py --mode simulator --tcp-port 5004
+
+# Run integration tests
+python -m pytest tests/test_icd_integration.py -v
+\`\`\`
+
+**Option 2: RS422 Emulator Testing (Linux only)**
+\`\`\`bash
+# Terminal 1: Start emulator with RS422
+python semsim.py --mode emulator --rs422-port /dev/ttyUSB1
+
+# Terminal 2: Send RS422 commands from OBC hardware
+# (Requires physical OBC or RS422 test equipment)
+\`\`\`
+
+**RS422 Frame Format:**
+\`\`\`
+[0x55][Message ID][Logical Unit ID][Payload Length][Payload...][0x55]
+\`\`\`
 
 ## Testing
 
@@ -203,7 +254,7 @@ pdu-simulator/
 ├── pdu_state.py           # State management (dataclasses)
 ├── pdu.py                 # PDU commands and functions
 ├── tmtc_manager.py        # TMTC communication manager
-├── rs422_interface.py     # RS422 serial interface
+├── rs422_handler.py       # RS422 serial interface
 ├── pdu_packetization.py   # PDU packet encoding/decoding
 ├── mcp.py                 # MCP23017 GPIO driver (low-level)
 ├── mcp_manager.py         # MCP hardware manager (high-level)
