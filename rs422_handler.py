@@ -197,7 +197,7 @@ class RS422Handler:
             return {"OverwriteUnitPwLines": {"LogicUnitId": logical_unit_id, "Parameters": parameters}}
         
         elif command_name == "GetUnitLineStates":
-            return {"GetUnitLineStates": {"LogicUnitId": logical_unit_id}}
+            return {"GetUnitLineStates": {}}
         
         elif command_name == "GetRawMeasurements":
             return {"GetRawMeasurements": {"LogicUnitId": logical_unit_id}}
@@ -262,11 +262,11 @@ class RS422Handler:
                 return json.loads(response_json)
             
             elif command_name == "GetRawMeasurements":
-                response_json = pdu.GetRawMeasurements(json_command, self.apid, self.state_manager)
+                response_json = pdu.GetRawMeasurements(params, self.apid, self.state_manager)
                 return json.loads(response_json)
             
             elif command_name == "GetConvertedMeasurements":
-                response_json = pdu.GetConvertedMeasurements(json_command, self.apid, self.state_manager)
+                response_json = pdu.GetConvertedMeasurements(params, self.apid, self.state_manager)
                 return json.loads(response_json)
             
             else:
