@@ -219,6 +219,47 @@ The test will:
 
 **Note**: If SEMSIM is not running, the test will fail with a connection error message.
 
+### RS422 Integration Test
+
+The RS422 integration test validates complete OBC-to-SEMSIM communication via RS422 serial interface with ICD-compliant commands.
+
+**Test Coverage:**
+1. **ObcHeartBeat** - Bidirectional heartbeat verification
+2. **GetPduStatus** - PDU state and status retrieval
+3. **GetUnitLineStates** - Unit line state verification
+4. **PduGoOperate** - State transition with acknowledgement
+5. **SetUnitPwLines** - Unit power line control
+6. **GetConvertedMeasurements** - Telemetry retrieval
+7. **ResetUnitPwLines** - Bitwise reset operations
+
+**Running RS422 Tests:**
+
+\`\`\`bash
+# Terminal 1: Start SEMSIM in emulator mode with RS422
+python semsim.py --mode emulator --rs422-port /dev/ttyUSB0 --rs422-baud 115200
+
+# Terminal 2: Run RS422 integration tests
+python -m unittest tests.test_rs422_integration -v
+
+# Or use the test runner script
+bash run_rs422_tests.sh
+
+# Run specific test
+python -m unittest tests.test_rs422_integration.TestPduRs422Integration.test_01_heartbeat -v
+\`\`\`
+
+**Hardware Requirements:**
+- RS422 serial adapter connected to /dev/ttyUSB0 (or specified port)
+- Linux environment (RS422 not supported on Windows)
+- Proper port permissions: `sudo chmod 666 /dev/ttyUSB0`
+- Matching baud rate configuration (default: 115200)
+
+**Troubleshooting:**
+- **Port not found**: Check `ls /dev/ttyUSB*` to find available ports
+- **Permission denied**: Run `sudo chmod 666 /dev/ttyUSB0`
+- **No response**: Verify SEMSIM is running in emulator mode with correct RS422 port
+- **Frame errors**: Ensure baud rate matches between test and SEMSIM
+
 ## PDU States
 
 - **0**: Boot
@@ -259,8 +300,10 @@ pdu-simulator/
 ├── mcp.py                 # MCP23017 GPIO driver (low-level)
 ├── mcp_manager.py         # MCP hardware manager (high-level)
 ├── tests/
-│   └── test_icd_integration.py  # ICD integration test
+│   ├── test_icd_integration.py  # ICD integration test
+│   └── test_rs422_integration.py  # RS422 integration test
 ├── run_tests.sh           # Test runner script
+├── run_rs422_tests.sh     # RS422 test runner script
 └── README.md
 \`\`\`
 
@@ -268,7 +311,7 @@ pdu-simulator/
 
 1. Add command handler in `pdu.py`
 2. Add command processing in `tmtc_manager.py` `cmd_processing()`
-3. Add test case in `tests/test_icd_integration.py`
+3. Add test case in `tests/test_icd_integration.py` or `tests/test_rs422_integration.py`
 
 ### Hardware Requirements (Emulator Mode)
 
