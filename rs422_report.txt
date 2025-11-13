@@ -10,8 +10,9 @@ Test OBC heartbeat command via RS422 ...
 TEST: OBC Heartbeat (RS422)
 ======================================================================
 → Sending: {'ObcHeartBeat': {'HeartBeat': 42}}
-← Received: {'PduHeartBeat': {'HeartBeat': 123, 'PduState': 1}}
-FAIL
+← Received: {'PduHeartBeat': {'HeartBeat': 42, 'PduState': 1}}
+✓ RS422 Heartbeat test passed
+ok
 test_02_get_pdu_status (tests.test_rs422_integration.TestPduRs422Integration)
 Test GetPduStatus command via RS422 ... 
 ======================================================================
@@ -49,8 +50,9 @@ TEST: Set Unit Power Lines (RS422)
 → Sending: {'SetUnitPwLines': {'LogicUnitId': 0, 'Parameters': 3}}
 ← Set Ack: {'MsgAcknowledgement': {'RequestedMsgId': 'SetUnitPwLines', 'PduReturnCode': 1}}
 → Sending: {'GetUnitLineStates': {}}
-← Received: {'PduUnitLineStates': {'HighPwHeaterEnSel': 123, 'LowPwHeaterEnSel': 0, 'ReactionWheelEnSel': 0, 'PropEnSel': 0, 'AvionicLoadEnSel': 0, 'HdrmEnSel': 0, 'IsolatedLdoEnSel': 0, 'IsolatedPwEnSel': 0, 'ThermAndFlybackEnSel': 255}}
-FAIL
+← Received: {'PduUnitLineStates': {'HighPwHeaterEnSel': 3, 'LowPwHeaterEnSel': 0, 'ReactionWheelEnSel': 0, 'PropEnSel': 0, 'AvionicLoadEnSel': 0, 'HdrmEnSel': 0, 'IsolatedLdoEnSel': 0, 'IsolatedPwEnSel': 0, 'ThermAndFlybackEnSel': 255}}
+✓ Unit power lines set successfully via RS422
+ok
 test_06_get_converted_measurements (tests.test_rs422_integration.TestPduRs422Integration)
 Test GetConvertedMeasurements command via RS422 ... 
 ======================================================================
@@ -71,26 +73,9 @@ TEST: Reset Unit Power Lines (RS422)
 → Sending: {'ResetUnitPwLines': {'LogicUnitId': 1, 'Parameters': 15}}
 ← Reset Ack: {'MsgAcknowledgement': {'RequestedMsgId': 'ResetUnitPwLines', 'PduReturnCode': 1}}
 → Sending: {'GetUnitLineStates': {}}
-← Received: {'PduUnitLineStates': {'HighPwHeaterEnSel': 123, 'LowPwHeaterEnSel': 0, 'ReactionWheelEnSel': 123, 'PropEnSel': 0, 'AvionicLoadEnSel': 0, 'HdrmEnSel': 0, 'IsolatedLdoEnSel': 0, 'IsolatedPwEnSel': 0, 'ThermAndFlybackEnSel': 255}}
-FAIL
-
-======================================================================
-FAIL: test_01_heartbeat (tests.test_rs422_integration.TestPduRs422Integration)
-Test OBC heartbeat command via RS422
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/home/pdu/Documents/semsim_pdu/tests/test_rs422_integration.py", line 241, in test_01_heartbeat
-    self.assertEqual(response["PduHeartBeat"]["HeartBeat"], 42)
-AssertionError: 123 != 42
-
-======================================================================
-FAIL: test_05_set_unit_power_lines (tests.test_rs422_integration.TestPduRs422Integration)
-Test SetUnitPwLines command via RS422
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/home/pdu/Documents/semsim_pdu/tests/test_rs422_integration.py", line 345, in test_05_set_unit_power_lines
-    self.assertEqual(response["PduUnitLineStates"]["HighPwHeaterEnSel"], 3)
-AssertionError: 123 != 3
+← Received: {'PduUnitLineStates': {'HighPwHeaterEnSel': 3, 'LowPwHeaterEnSel': 240, 'ReactionWheelEnSel': 15, 'PropEnSel': 0, 'AvionicLoadEnSel': 0, 'HdrmEnSel': 0, 'IsolatedLdoEnSel': 0, 'IsolatedPwEnSel': 0, 'ThermAndFlybackEnSel': 255}}
+✓ Unit power lines reset successfully via RS422
+ok
 
 ======================================================================
 FAIL: test_06_get_converted_measurements (tests.test_rs422_integration.TestPduRs422Integration)
@@ -101,16 +86,7 @@ Traceback (most recent call last):
     self.assertIsNotNone(response, "No response received from SEMSIM")
 AssertionError: unexpectedly None : No response received from SEMSIM
 
-======================================================================
-FAIL: test_07_reset_unit_power_lines (tests.test_rs422_integration.TestPduRs422Integration)
-Test ResetUnitPwLines command via RS422
 ----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/home/pdu/Documents/semsim_pdu/tests/test_rs422_integration.py", line 433, in test_07_reset_unit_power_lines
-    self.assertEqual(response["PduUnitLineStates"]["LowPwHeaterEnSel"], 240)  # 0x00F0
-AssertionError: 0 != 240
+Ran 7 tests in 9.461s
 
-----------------------------------------------------------------------
-Ran 7 tests in 9.604s
-
-FAILED (failures=4)
+FAILED (failures=1)
