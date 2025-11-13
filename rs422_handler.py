@@ -170,6 +170,7 @@ class RS422Handler:
         """Convert RS422 command to JSON format"""
         if command_name == "ObcHeartBeat":
             heartbeat = payload[0] if len(payload) > 0 else 0
+            LOGGER.info(f"[RS422] Extracted heartbeat from payload: {heartbeat} (payload={payload[:min(4, len(payload))]})") 
             return {"ObcHeartBeat": {"HeartBeat": heartbeat}}
         
         elif command_name == "GetPduStatus":
