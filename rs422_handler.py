@@ -168,48 +168,59 @@ class RS422Handler:
     
     def _convert_to_json(self, command_name: str, logical_unit_id: int, payload: list) -> dict:
         """Convert RS422 command to JSON format"""
-        if command_name == "ObcHeartBeat":
-            heartbeat = payload[0] if len(payload) > 0 else 0
-            LOGGER.info(f"[RS422] Extracted heartbeat from payload: {heartbeat} (payload={payload[:min(4, len(payload))]})") 
-            return {"ObcHeartBeat": {"HeartBeat": heartbeat}}
-        
-        elif command_name == "GetPduStatus":
-            return {"GetPduStatus": {}}
-        
-        elif command_name == "PduGoLoad":
-            return {"PduGoLoad": {}}
-        
-        elif command_name == "PduGoSafe":
-            return {"PduGoSafe": {}}
-        
-        elif command_name == "PduGoOperate":
-            return {"PduGoOperate": {}}
-        
-        elif command_name == "SetUnitPwLines":
-            parameters = payload[0] if len(payload) > 0 else 0
-            return {"SetUnitPwLines": {"LogicUnitId": logical_unit_id, "Parameters": parameters}}
-        
-        elif command_name == "ResetUnitPwLines":
-            parameters = payload[0] if len(payload) > 0 else 0
-            return {"ResetUnitPwLines": {"LogicUnitId": logical_unit_id, "Parameters": parameters}}
-        
-        elif command_name == "OverwriteUnitPwLines":
-            parameters = payload[0] if len(payload) > 0 else 0
-            return {"OverwriteUnitPwLines": {"LogicUnitId": logical_unit_id, "Parameters": parameters}}
-        
-        elif command_name == "GetUnitLineStates":
-            return {"GetUnitLineStates": {}}
-        
-        elif command_name == "GetRawMeasurements":
-            return {"GetRawMeasurements": {"LogicUnitId": logical_unit_id}}
-        
-        elif command_name == "GetConvertedMeasurements":
-            return {"GetConvertedMeasurements": {"LogicUnitId": logical_unit_id}}
-        
-        else:
-            LOGGER.warning(f"Unknown RS422 command: {command_name}")
-            return {}
-    
+        try:
+            # Convert payload bytes to string and parse JSON
+            payload_bytes = bytes(payload)
+            payload_str = payload_bytes.decode('utf-8')
+            json_data = json.loads(payload_str)
+            LOGGER.info(f"[RS422] Decoded JSON payload: {json_data}")
+            return json_data
+        except Exception as e:
+            LOGGER.warning(f"[RS422] Failed to decode JSON payload: {e}, falling back to binary parsing")
+            
+            # Fallback to binary parsing for non-JSON payloads
+            if command_name == "ObcHeartBeat":
+                heartbeat = payload[0] if len(payload) > 0 else 0
+                LOGGER.info(f"[RS422] Extracted heartbeat from binary payload: {heartbeat}")
+                return {"ObcHeartBeat": {"HeartBeat": heartbeat}}
+            
+            elif command_name == "GetPduStatus":
+                return {"GetPduStatus": {}}
+            
+            elif command_name == "PduGoLoad":
+                return {"PduGoLoad": {}}
+            
+            elif command_name == "PduGoSafe":
+                return {"PduGoSafe": {}}
+            
+            elif command_name == "PduGoOperate":
+                return {"PduGoOperate": {}}
+            
+            elif command_name == "SetUnitPwLines":
+                parameters = payload[0] if len(payload) > 0 else 0
+                return {"SetUnitPwLines": {"LogicUnitId": logical_unit_id, "Parameters": parameters}}
+            
+            elif command_name == "ResetUnitPwLines":
+                parameters = payload[0] if len(payload) > 0 else 0
+                return {"ResetUnitPwLines": {"LogicUnitId": logical_unit_id, "Parameters": parameters}}
+            
+            elif command_name == "OverwriteUnitPwLines":
+                parameters = payload[0] if len(payload) > 0 else 0
+                return {"OverwriteUnitPwLines": {"LogicUnitId": logical_unit_id, "Parameters": parameters}}
+            
+            elif command_name == "GetUnitLineStates":
+                return {"GetUnitLineStates": {}}
+            
+            elif command_name == "GetRawMeasurements":
+                return {"GetRawMeasurements": {"LogicUnitId": logical_unit_id}}
+            
+            elif command_name == "GetConvertedMeasurements":
+                return {"GetConvertedMeasurements": {"LogicUnitId": logical_unit_id}}
+            
+            else:
+                LOGGER.warning(f"Unknown RS422 command: {command_name}")
+                return {}
+
     def _process_command(self, json_command: dict, message_id: int, logical_unit_id: int):
         """Process command and generate response"""
         command_name = list(json_command.keys())[0] if json_command else None
