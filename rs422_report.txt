@@ -111,4 +111,6 @@ Traceback (most recent call last):
 AssertionError: 0 != 240
 
 ----------------------------------------------------------------------
-Ran 7 tests in 9.588s
+Ran 7 tests in 9.604s
+
+FAILED (failures=4)
