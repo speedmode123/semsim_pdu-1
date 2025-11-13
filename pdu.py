@@ -71,11 +71,14 @@ def ObcHeartBeat(ObcHeartBeat, apid, state_manager):
     LOGGER.info(f"PDU internal updated_status {updated_status}")
     
     incoming_heartbeat = ObcHeartBeat["ObcHeartBeat"]["HeartBeat"]
-    LOGGER.info(f"Incoming heartbeat: {incoming_heartbeat}")
+    LOGGER.info(f"[ObcHeartBeat] Before update: unit.heartbeat.HeartBeat={unit.heartbeat.HeartBeat}")
+    LOGGER.info(f"[ObcHeartBeat] Incoming heartbeat: {incoming_heartbeat}")
     
     unit.heartbeat.HeartBeat = incoming_heartbeat
     unit.heartbeat.PduState = updated_status
-    LOGGER.info(f"Dict_PduHeartBeat: {unit.heartbeat.to_dict()}")
+    
+    LOGGER.info(f"[ObcHeartBeat] After update: unit.heartbeat.HeartBeat={unit.heartbeat.HeartBeat}")
+    LOGGER.info(f"[ObcHeartBeat] Dict_PduHeartBeat: {unit.heartbeat.to_dict()}")
     
     return json.dumps(unit.heartbeat.to_dict())
 

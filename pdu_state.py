@@ -14,8 +14,8 @@ LOGGER = logging.getLogger(__name__)
 @dataclass
 class PduHeartBeatState:
     """PDU Heartbeat state"""
-    HeartBeat: int = 0x00
-    PduState: int = 0x00
+    HeartBeat: int = 0
+    PduState: int = 0
 
     def to_dict(self) -> dict:
         return {"PduHeartBeat": {"HeartBeat": self.HeartBeat, "PduState": self.PduState}}
